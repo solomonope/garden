@@ -155,6 +155,10 @@ commands:
             - dist/
             # Needed for the alpine docker build
             - tmp/pkg/
+      - run:
+          # No need to store the raw files as artifacts, we just want the archives
+          name: Cleanup
+          command: rm -rf dist/*-amd64
       - store_artifacts:
           path: dist
           destination: dist
