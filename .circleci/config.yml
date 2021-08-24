@@ -138,9 +138,17 @@ commands:
       - checkout
       - npm_install
       - *attach-workspace
+      # Cache the pkg base binaries
+      - restore_cache:
+          keys:
+            - pkg-0
       - run:
-          name: Run dist command with the appropriate argument
+          name: Build and package the binaries
           command: yarn run dist --version "<<parameters.version>>"
+      - save_cache:
+          key: pkg-0
+          paths:
+            - ~/.pkg-cache
       - persist_to_workspace:
           root: ./
           paths:
