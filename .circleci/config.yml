@@ -592,6 +592,8 @@ jobs:
       - update_nodejs
       # Note: We can't use npm_install here because the cache conflicts
       - run: yarn
+      # Some odd issue with sqlite installation, need to run twice
+      - run: yarn --force
       - run: yarn run build
       - run:
           name: Integ tests
@@ -647,6 +649,8 @@ jobs:
       - update_nodejs
       # Note: We can't use npm_install here because the cache conflicts
       - run: yarn
+      # Some odd issue with sqlite installation, need to run twice
+      - run: yarn --force
       - run: yarn run build
       - run:
           name: Install Minikube Executable
