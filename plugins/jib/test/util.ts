@@ -67,12 +67,13 @@ describe("util", () => {
           buildArgs: {},
         },
       }
-      const { flags } = getBuildFlags(module, "gradle")
+      const { args } = getBuildFlags(module, "gradle")
 
       const targetDir = "build"
       const basenameSuffix = "-foo-" + module.version.versionString
 
-      expect(flags).to.eql([
+      expect(args).to.eql([
+        "jibBuild",
         "-Djib.to.image=" + imageId,
         `-Djib.outputPaths.tar=${targetDir}/jib-image${basenameSuffix}.tar`,
         `-Djib.outputPaths.digest=${targetDir}/jib-image${basenameSuffix}.digest`,
@@ -104,9 +105,9 @@ describe("util", () => {
           buildArgs: {},
         },
       }
-      const { flags, tarPath } = getBuildFlags(module, "maven")
+      const { args, tarPath } = getBuildFlags(module, "maven")
 
-      expect(flags).to.include(`-Djib.outputPaths.tar=target/jib-image-foo-${module.version.versionString}.tar`)
+      expect(args).to.include(`-Djib.outputPaths.tar=target/jib-image-foo-${module.version.versionString}.tar`)
       expect(tarPath).to.equal(`/foo/target/jib-image-foo-${module.version.versionString}.tar`)
     })
 
@@ -128,8 +129,8 @@ describe("util", () => {
         },
       }
 
-      const { flags } = getBuildFlags(module, "maven")
-      expect(flags).to.include("bloop")
+      const { args } = getBuildFlags(module, "maven")
+      expect(args).to.include("bloop")
     })
 
     it("adds docker build args if set in module spec", () => {
@@ -151,9 +152,9 @@ describe("util", () => {
         },
       }
 
-      const { flags } = getBuildFlags(module, "maven")
+      const { args } = getBuildFlags(module, "maven")
 
-      expect(flags).to.include("-Djib.container.args=GARDEN_MODULE_VERSION=" + versionString + ",foo=bar")
+      expect(args).to.include("-Djib.container.args=GARDEN_MODULE_VERSION=" + versionString + ",foo=bar")
     })
 
     it("sets OCI tar format if tarOnly and tarFormat=oci are set", () => {
@@ -178,9 +179,9 @@ describe("util", () => {
         },
       }
 
-      const { flags } = getBuildFlags(module, "maven")
+      const { args } = getBuildFlags(module, "maven")
 
-      expect(flags).to.include("-Djib.container.format=OCI")
+      expect(args).to.include("-Djib.container.format=OCI")
     })
   })
 })

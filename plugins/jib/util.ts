@@ -13,6 +13,7 @@ import { getDockerBuildArgs } from "@garden-io/core/build/src/plugins/container/
 import { ContainerBuildSpec, ContainerModuleSpec } from "@garden-io/core/build/src/plugins/container/config"
 
 interface JibModuleBuildSpec extends ContainerBuildSpec {
+  buildInDocker?: boolean
   projectType: "gradle" | "maven" | "auto"
   jdkVersion: number
   tarOnly?: boolean
@@ -60,7 +61,31 @@ export function detectProjectType(module: GardenModule): JibPluginType {
 }
 
 export function getBuildFlags(module: JibContainerModule, projectType: JibModuleBuildSpec["projectType"]) {
-  const targetDir = projectType === "maven" ? "target" : "build"
+  const { tarOnly, tarFormat, buildInDocker } = module.spec.build
+
+  let targetDir: string
+  let target: string
+
+  if (projectType === "maven") {
+    targetDir = "target"
+    if (tarOnly) {
+      target = "jib:buildTar"
+    } else if (buildInDocker) {
+      target = "jib:dockerBuild"
+    } else {
+      target = "jib:build"
+    }
+  } else {
+    targetDir = "build"
+    if (tarOnly) {
+      target = "jibBuildTar"
+    } else if (buildInDocker) {
+      target = "jibDockerBuild"
+    } else {
+      target = "jibBuild"
+    }
+  }
+
   // Make sure the target directory is scoped by module name, in case there are multiple modules in a project
   const basenameSuffix = `-${module.name}-${module.version.versionString}`
   const tarFilename = `jib-image${basenameSuffix}.tar`
@@ -70,24 +95,30 @@ export function getBuildFlags(module: JibContainerModule, projectType: JibModule
 
   const dockerBuildArgs = getDockerBuildArgs(module)
   const imageId = module.outputs["local-image-id"]
-  const { tarOnly, tarFormat } = module.spec.build
 
-  const flags = [
+  const args = [
+    target,
     "-Djib.to.image=" + imageId,
-    `-Djib.outputPaths.tar=${targetDir}/${tarFilename}`,
-    `-Djib.outputPaths.digest=${targetDir}/jib-image${basenameSuffix}.digest`,
-    `-Djib.outputPaths.imageId=${targetDir}/jib-image${basenameSuffix}.id`,
-    `-Djib.outputPaths.imageJson=${targetDir}/jib-image${basenameSuffix}.json`,
     "-Djib.container.args=" + dockerBuildArgs.join(","),
     "-Dstyle.color=always",
     "-Djansi.passthrough=true",
     "-Djib.console=plain",
-    ...(module.spec.extraFlags || []),
   ]
 
-  if (tarOnly && tarFormat === "oci") {
-    flags.push("-Djib.container.format=OCI")
+  if (tarOnly) {
+    args.push(
+      `-Djib.outputPaths.tar=${targetDir}/${tarFilename}`,
+      `-Djib.outputPaths.digest=${targetDir}/jib-image${basenameSuffix}.digest`,
+      `-Djib.outputPaths.imageId=${targetDir}/jib-image${basenameSuffix}.id`,
+      `-Djib.outputPaths.imageJson=${targetDir}/jib-image${basenameSuffix}.json`,
+    )
+
+    if (tarFormat === "oci") {
+      args.push("-Djib.container.format=OCI")
+    }
   }
 
-  return { flags, tarPath }
+  args.push(...(module.spec.extraFlags || []))
+
+  return { args, tarPath }
 }
