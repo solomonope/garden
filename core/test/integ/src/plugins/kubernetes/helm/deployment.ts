@@ -15,7 +15,7 @@ import { KubernetesPluginContext, KubernetesProvider } from "../../../../../../s
 import { getReleaseStatus } from "../../../../../../src/plugins/kubernetes/helm/status"
 import { getReleaseName } from "../../../../../../src/plugins/kubernetes/helm/common"
 import { KubeApi } from "../../../../../../src/plugins/kubernetes/api"
-import { getHelmTestGarden, buildHelmModules } from "./common"
+import { getHelmTestGarden, prepareHelmModules } from "./common"
 import { ConfigGraph } from "../../../../../../src/config-graph"
 
 describe("deployHelmService", () => {
@@ -29,7 +29,7 @@ describe("deployHelmService", () => {
     provider = <KubernetesProvider>await garden.resolveProvider(garden.log, "local-kubernetes")
     ctx = <KubernetesPluginContext>await garden.getPluginContext(provider)
     graph = await garden.getConfigGraph({ log: garden.log, emit: false })
-    await buildHelmModules(garden, graph)
+    await prepareHelmModules(garden.log, ctx, graph)
   })
 
   after(async () => {
